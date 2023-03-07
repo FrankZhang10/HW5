@@ -1,0 +1,150 @@
+---
+title: 'Homework #5'
+author: "Frank Zhang"
+date: "3/6/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Homework 5
+#### Due: 3/6/2022 before 11:59pm. Submit in Canvas (file upload).
+
+**I am the only group member. Github link: https://github.com/FrankZhang10/HW5**
+
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+
+choco <- read.csv("https://ds202-at-isu.github.io/labs/data/choco.csv")
+head(choco)
+```
+
+Question Set I
+
+1. What is the overall number of chocolate bars rated?
+
+**Answer: 1852**
+```{r}
+#Either function works for finding the overall number of chocolate bars rated. 
+#Answer: There are 1852 bars rated.
+str(choco)
+nrow(choco)
+```
+ 
+2. How does the number of ratings depend on the year? Draw a bar chart of the number of reports.
+
+**Answer: The general trend is that the number of ratings increased as the years went on from 2006 to 2015 (there are some years where the number of ratings slightly decreased in this range). After 2015, the following two years saw a relatively large decrease in the number of ratings (years 2016 and 2017). This analysis was done with the second chart.**
+
+```{r}
+
+ggplot(data = choco, aes(x = Review.Date, y = Rating)) + geom_bar(stat = "identity")
+
+#Alternatively:
+choco %>% ggplot(aes(x = as.factor(Review.Date))) + 
+  geom_bar() +
+  ggtitle("") +
+  xlab("Year")
+
+
+```
+Question Set II
+
+1. How are ratings distributed? Draw a histogram of ratings and describe it. Don't forget to mention outliers, if there are any. 
+
+**Answer: The distribution seems to be a relatively normal distribution centered around a rating of approximately 3. The potential outliers could be the ratings of 1 or 5 as they are far from the center and low in count.  **
+
+ 
+```{r}
+choco %>% ggplot(aes(x = as.factor(Rating))) + 
+  geom_bar() +
+  ggtitle("") +
+  xlab("Year")
+
+boxplot.stats(choco$Rating)$out
+
+#Histogram
+ggplot(choco, aes(x = Rating)) + 
+  geom_histogram(binwidth = 0.5, fill = "red", color = "black") + 
+  labs(title = "Distribution of Ratings", x = "Rating", y = "Count")
+```
+
+2. Do ratings depend on the cocoa percentage of a chocolate bar?
+
+**Answer: From the scatterplot below, there is no visibly obvious correlation between ratings and cocoa percentage. The correlation value of -0.16 also indicates no correlation, or a very weak one if it does exist.**
+
+
+```{r}
+choco %>% ggplot(aes(x = Cocoa.Pct, y = Rating)) + 
+  geom_point() 
+
+data <- choco[, c(5, 7)]
+round(cor(data), 2)
+```
+
+3. How do ratings compare across different company locations? Focus on the three locations with the most ratings.
+
+**Answer: It is clear that the USA produces the most chocolate with France and Canada noticebly behind. Factoring in this difference, the ratings for the number of bars made seem to be relatively similar (with most bars rating fairly average). This can be further seen with the actual mean/average values, which are extremely similar. The average rating for the USA is 3.162325, 3.3125 for Canada, and 3.253165 for France.**
+
+
+```{r}
+#dplyr::filter(choco, Company.Location %in% c("U.S.A.", "France", "Canada"))
+
+choco1 <- dplyr::filter(choco, Company.Location %in% c("U.S.A.","France", "Canada"))
+choco2 <- dplyr::filter(choco, Company.Location %in% c("U.S.A."))
+choco3 <- dplyr::filter(choco, Company.Location %in% c("Canada"))
+choco4 <- dplyr::filter(choco, Company.Location %in% c("France"))
+
+ggplot(data = choco1, aes(x = Company.Location)) +
+  geom_bar(aes(weight = Rating), position = position_dodge()) +
+  facet_wrap(~Rating)
+
+ggplot(choco1, aes(Rating)) + 
+  geom_bar() +
+  facet_wrap(.~Company.Location)
+
+str(choco2)
+str(choco3)
+str(choco4)
+mean(choco2$Rating)
+mean(choco3$Rating)
+mean(choco4$Rating)
+```
+
+
+Your own question:
+1. What is the distribution of cocoa content in chocolate bars?
+
+**Answer: The distribution of cocoa content seems to follow a distribution where most of the chocolate bars have between 65 to 80% cocoa content. The average is approximately 72%. **
+
+
+```{r}
+library(stringr)
+
+colnames(choco) <- c("Company", "Origin", "REF", "Review.Date", "Cocoa.Percent", "Company.Location", "Rating", "Bean.Type", "Bean.Origin")
+
+ratings_data <- choco
+
+# Remove "%" sign from cocoa content and convert it to a numeric variable
+ratings_data$Cocoa.Percent <- as.numeric(gsub(pattern = "%", replacement = "", x = ratings_data$Cocoa.Percent))
+
+# Histogram of Cocoa Content
+ggplot(data = choco, aes(x = Cocoa.Percent)) +
+  geom_histogram(bins = 20, alpha = 0.80) + # set number of bins to 20
+  theme_light() + # Use a custome theme
+  coord_cartesian(expand = FALSE, ylim = c(0, 750)) +
+  labs(x = "Cocoa Content (%)", 
+       y = "Count",
+       title = "Distribution of Cocoa Content in Chocolates")
+```
+
+
+**Conclusions: There are likely many factors that influence the rating of a chocolate bar, but not everything was analyzed. It was shown that there is a weak (if any) correlation between the cocoa content of a chocolate bar and its rating. The workflow of this homework was relatively simple since I was the only person working on it. I would go in order starting with each question and generate a relevant plot. Then I would use the plot to add a text answer to the question**
+
+Note: your submission is supposed to be fully reproducible, i.e. the TA and I will 'knit' your submission in RStudio. 
+
+
+For the submission: submit your solution in an **R Markdown file** and (just for insurance) submit the **corresponding html (or Word)** file with it. 
